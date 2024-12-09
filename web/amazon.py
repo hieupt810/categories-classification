@@ -6,8 +6,8 @@ from driver import Driver
 
 
 def get_category_images(
-    keys,
-    category,
+    keys: list[str],
+    category: str,
     total=5000,
     url="https://www.amazon.com/s?k={}&s=exact-aware-popularity-rank&page={}",
 ):
@@ -22,6 +22,9 @@ def get_category_images(
         keys.sort()
         for page in range(1, 20):
             zero_count = 0
+            zero_keys = set()
+            for key in zero_keys:
+                keys.remove(key)
             for key in keys:
                 formatted_url = url.format(key, page)
                 driver.get(formatted_url)
@@ -41,6 +44,7 @@ def get_category_images(
                 )
                 if len(items) == 0:
                     zero_count += 1
+                    zero_keys.add(key)
 
                 for item in items:
                     src = item.get_attribute("src")
@@ -56,12 +60,12 @@ def get_category_images(
                     if count == total:
                         break
 
+                print(f"Category {category} - Key {key} - Page {page} done!")
                 if count == total:
                     break
-
-                print(f"Category {category} - Key {key} - Page {page} done!")
-            if zero_count == len(keys):
-                print("Exhausted")
+                
+            if zero_count == len(keys) or count == total:
+                print("Done")
                 break
     finally:
         driver.close()
