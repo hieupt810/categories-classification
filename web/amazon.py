@@ -1,10 +1,8 @@
 import os
-from uuid import uuid4
 
 import requests
 
 from driver import Driver
-from selenium.webdriver.common.by import By
 
 
 def get_category_images(
@@ -20,7 +18,7 @@ def get_category_images(
     driver = Driver(loading_seconds=0.5)
     try:
         imgs = set()
-        count=0
+        count = 0
         keys.sort()
         for page in range(1, 20):
             zero_count = 0
@@ -29,20 +27,24 @@ def get_category_images(
                 driver.get(formatted_url)
                 driver.scroll_down()
 
-                items = driver.find_elements("div.s-result-item.s-asin > div > div > span > div > div > div > span > a > div > img.s-image")
+                items = driver.find_elements(
+                    "div.s-result-item.s-asin > div > div > span > div > div > div > span > a > div > img.s-image"
+                )
                 if len(items) == 0:
-                    items = driver.find_elements("div.s-result-item.s-asin > div > div > span > div > div > div > div > div > div > div > span > a > div > img.s-image")
+                    items = driver.find_elements(
+                        "div.s-result-item.s-asin > div > div > span > div > div > div > div > div > div > div > span > a > div > img.s-image"
+                    )
                 print(
                     "Found {} items in page {} in URL: {}".format(
                         len(items), page, formatted_url
                     )
                 )
                 if len(items) == 0:
-                    zero_count+=1
+                    zero_count += 1
 
                 for item in items:
                     src = item.get_attribute("src")
-                    name = src.split('/')[-1].split('.')[0]
+                    name = src.split("/")[-1].split(".")[0]
                     if name in imgs:
                         continue
                     img = requests.get(src).content
@@ -50,10 +52,10 @@ def get_category_images(
                     path = os.path.join(folder, f"{name}.jpg")
                     with open(path, "wb") as file:
                         file.write(img)
-                        count+=1
+                        count += 1
                     if count == total:
                         break
-                
+
                 if count == total:
                     break
 
