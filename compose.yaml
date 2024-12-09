@@ -1,0 +1,9 @@
+services:
+    selenium:
+        container_name: selenium
+        image: seleniarm/standalone-chromium:latest
+        restart: unless-stopped
+        privileged: true
+        shm_size: 2gb
+        ports:
+            - 4444:4444
