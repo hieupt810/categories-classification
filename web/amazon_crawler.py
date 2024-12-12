@@ -1,8 +1,52 @@
 import os
+import time
 
 import requests
+from selenium.webdriver import Chrome, ChromeOptions, Remote
+from selenium.webdriver.common.by import By
 
 from driver import Driver
+
+
+class Driver:
+    def __init__(
+        self, remote=False, loading_seconds=3, executor="http://localhost:4444/wd/hub"
+    ):
+        self.loading_seconds = loading_seconds
+
+        options = ChromeOptions()
+        if remote:
+            self.driver = Remote(command_executor=executor, options=options)
+        else:
+            self.driver = Chrome(options=options)
+
+        self.driver.maximize_window()
+
+    def get(self, url):
+        self.driver.get(url)
+        time.sleep(self.loading_seconds)
+
+    def close(self):
+        self.driver.close()
+
+    def scroll_down(self):
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(self.loading_seconds)
+
+    def find_element(self, selector):
+        return self.driver.find_element(By.CSS_SELECTOR, selector)
+
+    def find_elements(self, selector):
+        return self.driver.find_elements(By.CSS_SELECTOR, selector)
+
+    def open_new_tab(self, url):
+        self.driver.execute_script(f"window.open('{url}', '_blank');")
+        self.driver.switch_to.window(self.driver.window_handles[-1])
+        time.sleep(self.loading_seconds)
+
+    def close_current_tab(self):
+        self.driver.close()
+        self.driver.switch_to.window(self.driver.window_handles[-1])
 
 
 def get_category_images(
@@ -63,7 +107,7 @@ def get_category_images(
                 print(f"Category {category} - Key {key} - Page {page} done!")
                 if count == total:
                     break
-                
+
             if zero_count == len(keys) or count == total:
                 print("Done")
                 break
@@ -72,75 +116,6 @@ def get_category_images(
 
 
 if __name__ == "__main__":
-    # get_category_images(
-    #     keys=[
-    #         "laptop",
-    #         "tablet",
-    #         "camera",
-    #         "headphones",
-    #         "speaker",
-    #         "monitor",
-    #         "keyboard",
-    #         "computer+mouse",
-    #         "printer",
-    #         "projector",
-    #         "smartwatch",
-    #         "iphone",
-    #         "samsung+phone",
-    #         "xiaomi",
-    #         "huawei",
-    #         "desktop+computer",
-    #         "router",
-    #         "modem",
-    #     ],
-    #     category="electronics",
-    # )
-    # get_category_images(
-    #     keys=[
-    #         "t-shirt",
-    #         "jeans",
-    #         "shoes",
-    #         "hat",
-    #         "belt",
-    #         "sunglasses",
-    #         "dress",
-    #         "jacket",
-    #         "watch",
-    #         "bag",
-    #         "scarf",
-    #         "gloves",
-    #         "socks",
-    #         "sweater",
-    #         "hoodie",
-    #         "shorts",
-    #         "skirt",
-    #         "suit",
-    #     ],
-    #     category="fashion",
-    # )
-    # get_category_images(
-    #     keys=[
-    #         "sofa",
-    #         "table",
-    #         "chair",
-    #         "bed",
-    #         "desk",
-    #         "cabinet",
-    #         "shelf",
-    #         "lamp",
-    #         "dresser",
-    #         "rug",
-    #         "mirror",
-    #         "bench",
-    #         "stool",
-    #         "ottoman",
-    #         "couch",
-    #         "bookcase",
-    #         "nightstand",
-    #         "wardrobe",
-    #     ],
-    #     category="furniture",
-    # )
     get_category_images(
         keys=[
             "refrigerator",

@@ -1,7 +1,7 @@
 import collections.abc
 from functools import partial
 from itertools import repeat
-from typing import Callable, Literal, Optional, Tuple, Type, Union
+from typing import Callable, Optional, Tuple, Type, Union
 
 import torch
 import torch.nn as nn
@@ -34,7 +34,9 @@ class PatchEmbed(nn.Module):
         self.patch_size = to_2tuple(patch_size)
         self.img_size, self.grid_size, self.num_patches = self._init_img_size(img_size)
 
-        self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size, bias=bias)
+        self.proj = nn.Conv2d(
+            in_chans, embed_dim, kernel_size=patch_size, stride=patch_size, bias=bias
+        )
 
     def _init_img_size(self, img_size: Union[int, Tuple[int, int]]):
         assert self.patch_size
@@ -45,9 +47,13 @@ class PatchEmbed(nn.Module):
 
     def forward(self, x):
         B, C, H, W = x.shape
-        assert H == self.img_size[0], f"Input height ({H}) doesn't match model ({self.img_size[0]})."
-        assert W == self.img_size[1], f"Input width ({W}) doesn't match model ({self.img_size[1]})."
-            
+        assert (
+            H == self.img_size[0]
+        ), f"Input height ({H}) doesn't match model ({self.img_size[0]})."
+        assert (
+            W == self.img_size[1]
+        ), f"Input width ({W}) doesn't match model ({self.img_size[1]})."
+
         x = self.proj(x)
         x = x.flatten(2).transpose(1, 2)  # NCHW -> NLC
         return x
@@ -61,7 +67,7 @@ class Mlp(nn.Module):
         out_features=None,
         act_layer=nn.GELU,
         bias=True,
-        drop=0.,
+        drop=0.0,
     ):
         super().__init__()
         out_features = out_features or in_features
@@ -91,8 +97,8 @@ class Attention(nn.Module):
         dim: int,
         num_heads: int = 8,
         qkv_bias: bool = False,
-        attn_drop: float = 0.,
-        proj_drop: float = 0.,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
     ) -> None:
         super().__init__()
         assert dim % num_heads == 0, "dim should be divisible by num_heads"
@@ -132,10 +138,10 @@ class Block(nn.Module):
         self,
         dim: int,
         num_heads: int,
-        mlp_ratio: float = 4.,
+        mlp_ratio: float = 4.0,
         qkv_bias: bool = False,
-        proj_drop: float = 0.,
-        attn_drop: float = 0.,
+        proj_drop: float = 0.0,
+        attn_drop: float = 0.0,
         act_layer: nn.Module = nn.GELU,
         norm_layer: nn.Module = nn.LayerNorm,
         mlp_layer: nn.Module = Mlp,
@@ -163,6 +169,7 @@ class Block(nn.Module):
         x = x + self.mlp(self.norm2(x))
         return x
 
+
 class VisionTransformer(nn.Module):
     def __init__(
         self,
@@ -173,14 +180,16 @@ class VisionTransformer(nn.Module):
         embed_dim: int = 768,
         depth: int = 12,
         num_heads: int = 12,
-        mlp_ratio: float = 4.,
+        mlp_ratio: float = 4.0,
         qkv_bias: bool = True,
-        drop_rate: float = 0.,
-        pos_drop_rate: float = 0.,
-        proj_drop_rate: float = 0.,
-        attn_drop_rate: float = 0.,
+        drop_rate: float = 0.0,
+        pos_drop_rate: float = 0.0,
+        proj_drop_rate: float = 0.0,
+        attn_drop_rate: float = 0.0,
         embed_layer: Callable = PatchEmbed,
-        norm_layer: Optional[Union[str, Callable, Type[torch.nn.Module]]] = partial(nn.LayerNorm, eps=1e-6),
+        norm_layer: Optional[Union[str, Callable, Type[torch.nn.Module]]] = partial(
+            nn.LayerNorm, eps=1e-6
+        ),
         act_layer: Optional[Union[str, Callable, Type[torch.nn.Module]]] = nn.GELU,
         block_fn: Type[nn.Module] = Block,
         mlp_layer: Type[nn.Module] = Mlp,
@@ -224,19 +233,22 @@ class VisionTransformer(nn.Module):
         self.pos_embed = nn.Parameter(torch.randn(1, embed_len, embed_dim) * 0.02)
         self.pos_drop = nn.Dropout(p=pos_drop_rate)
 
-        self.blocks = nn.Sequential(*[
-            block_fn(
-                dim=embed_dim,
-                num_heads=num_heads,
-                mlp_ratio=mlp_ratio,
-                qkv_bias=qkv_bias,
-                proj_drop=proj_drop_rate,
-                attn_drop=attn_drop_rate,
-                norm_layer=norm_layer,
-                act_layer=act_layer,
-                mlp_layer=mlp_layer,
-            )
-            for _ in range(depth)])
+        self.blocks = nn.Sequential(
+            *[
+                block_fn(
+                    dim=embed_dim,
+                    num_heads=num_heads,
+                    mlp_ratio=mlp_ratio,
+                    qkv_bias=qkv_bias,
+                    proj_drop=proj_drop_rate,
+                    attn_drop=attn_drop_rate,
+                    norm_layer=norm_layer,
+                    act_layer=act_layer,
+                    mlp_layer=mlp_layer,
+                )
+                for _ in range(depth)
+            ]
+        )
         self.norm = norm_layer(embed_dim)
 
         # Classifier Head
